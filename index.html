@@ -10,14 +10,18 @@
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
 html,body{margin:0;height:100%;background:#000;color:#fff;font-family:-apple-system,"Pretendard","Noto Sans KR",sans-serif;overflow:hidden;touch-action:manipulation}
 #app{position:fixed;inset:0;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}
-#top{height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 14px;flex:none}
-#top .grp{display:flex;gap:8px}
-.tb{background:rgba(255,255,255,.12);border:0;color:#fff;font-size:14px;height:34px;min-width:52px;padding:0 12px;border-radius:17px}
-#brand{font-weight:700;letter-spacing:.5px;font-size:16px}
+#top{height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 10px;flex:none;gap:6px}
+#top .grp{display:flex;gap:6px}
+.tb{background:rgba(255,255,255,.12);border:0;color:#fff;font-size:13px;height:34px;padding:0 11px;border-radius:17px;white-space:nowrap}
+.tb.on{background:#ff6f91}
+.hid{display:none!important}
 #stage{flex:1;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;min-height:0}
 #gl{display:block;border-radius:6px}
 #flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;transition:opacity .25s}
 #count{position:absolute;font-size:96px;font-weight:700;text-shadow:0 2px 12px rgba(0,0,0,.5);pointer-events:none}
+#step{position:absolute;top:14px;right:14px;background:#ff6f91;padding:5px 12px;border-radius:14px;font-size:14px;font-weight:700;pointer-events:none}
+#palmDot{position:absolute;top:14px;left:14px;font-size:22px;opacity:.35;pointer-events:none;transition:opacity .15s}
+#palmDot.hit{opacity:1}
 #msg{position:absolute;left:50%;top:14px;transform:translateX(-50%);background:rgba(0,0,0,.6);padding:7px 14px;border-radius:16px;font-size:13px;white-space:nowrap;pointer-events:none;transition:opacity .3s}
 #panel{flex:none;background:#0d0d0d;padding:6px 0 0}
 #panel.hide .pane,#panel.hide #tabs{display:none}
@@ -41,9 +45,14 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
 .dot{width:30px;height:30px;border-radius:50%;border:2px solid transparent;flex:none;padding:0}
 .dot.on{border-color:#fff;box-shadow:0 0 0 2px #ff6f91}
 .dot.none{background:#222;color:#888;font-size:11px}
-#bottom{flex:none;height:112px;display:flex;align-items:center;justify-content:space-around;background:#0d0d0d}
+#bottom{flex:none;background:#0d0d0d;padding-bottom:6px}
+#modes{display:flex;justify-content:center;gap:22px;height:34px;align-items:center}
+#modes button{background:none;border:0;color:#888;font-size:14px;font-weight:600;padding:4px 6px}
+#modes button.on{color:#ff6f91}
+#ctrl{height:96px;display:flex;align-items:center;justify-content:space-around}
 .side{width:64px;height:44px;border:0;border-radius:22px;background:rgba(255,255,255,.1);color:#fff;font-size:13px}
-#bShot{width:76px;height:76px;border-radius:50%;border:5px solid #fff;background:#ff6f91;box-shadow:inset 0 0 0 4px #0d0d0d}
+#bShot{width:76px;height:76px;border-radius:50%;border:5px solid #fff;background:#ff6f91;box-shadow:inset 0 0 0 4px #0d0d0d;color:#fff;font-size:15px;font-weight:700}
+#bShot.four{background:linear-gradient(135deg,#ff6f91 50%,#ffb36b 50%)}
 #bShot:active{transform:scale(.93)}
 #loading{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:#000;z-index:5;font-size:14px;color:#ccc;text-align:center;padding:24px}
 #loading b{font-size:22px;color:#fff}
@@ -51,19 +60,29 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;heigh
 #preview[hidden]{display:none}
 #pvWrap{flex:1;display:flex;align-items:center;justify-content:center;min-height:0;padding:12px}
 #pvImg{max-width:100%;max-height:100%;border-radius:6px}
+#pvOpts{flex:none;padding:4px 16px 0}
+#pvOpts .r{display:flex;align-items:center;gap:10px;height:42px}
+#pvOpts .t{width:40px;font-size:13px;color:#ccc;flex:none}
+#pvOpts .seg{height:32px;padding:0 14px;border-radius:16px;border:0;background:rgba(255,255,255,.12);color:#fff;font-size:13px}
+#pvOpts .seg.on{background:#ff6f91}
+#pvOpts input[type=text]{flex:1;height:34px;border-radius:10px;border:1px solid #333;background:#151515;color:#fff;padding:0 12px;font-size:14px;user-select:text;-webkit-user-select:text}
 #pvBar{height:90px;display:flex;align-items:center;justify-content:space-around}
 #pvBar button{height:46px;min-width:92px;border-radius:23px;border:0;font-size:15px;background:rgba(255,255,255,.12);color:#fff}
 #pvBar #pvSave{background:#ff6f91}
-video,#mask{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+video,#mask,#fileIn{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
 </style>
 </head>
 <body>
 <div id="app">
   <div id="top">
-    <div id="brand">뽀샤캠</div>
     <div class="grp">
+      <button class="tb" id="bGallery">🖼 사진 보정</button>
+      <button class="tb hid" id="bBack">← 카메라로</button>
+    </div>
+    <div class="grp" id="camBtns">
+      <button class="tb" id="bPalm">✋ 끔</button>
       <button class="tb" id="bRatio">3:4</button>
-      <button class="tb" id="bTimer">타이머 끔</button>
+      <button class="tb" id="bTimer">⏱ 끔</button>
       <button class="tb" id="bFlip">전환</button>
     </div>
   </div>
@@ -71,8 +90,10 @@ video,#mask{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none
     <canvas id="gl"></canvas>
     <div id="flash"></div>
     <div id="count"></div>
+    <div id="step" class="hid"></div>
+    <div id="palmDot" class="hid">✋</div>
     <div id="msg" style="opacity:0"></div>
-    <div id="loading"><b>뽀샤캠</b><div id="loadTxt">카메라를 켜는 중…</div></div>
+    <div id="loading"><b>뽀샤캠</b><div id="loadTxt">카메라를 켜는 중…</div><div style="font-size:11px;color:#555">v1.1</div></div>
   </div>
   <div id="panel">
     <div id="tabs">
@@ -98,14 +119,28 @@ video,#mask{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none
     </div>
   </div>
   <div id="bottom">
-    <button class="side" id="bCompare">원본</button>
-    <button id="bShot" aria-label="촬영"></button>
-    <button class="side" id="bPanel">접기</button>
+    <div id="modes">
+      <button data-m="photo" class="on">사진</button>
+      <button data-m="four">네컷</button>
+    </div>
+    <div id="ctrl">
+      <button class="side" id="bCompare">원본</button>
+      <button id="bShot" aria-label="촬영"></button>
+      <button class="side" id="bPanel">접기</button>
+    </div>
   </div>
 </div>
 
 <div id="preview" hidden>
   <div id="pvWrap"><img id="pvImg" alt=""></div>
+  <div id="pvOpts" class="hid">
+    <div class="r"><div class="t">모양</div>
+      <button class="seg" data-l="strip">세로 1×4</button>
+      <button class="seg" data-l="grid">2×2</button>
+    </div>
+    <div class="r" id="frameCols"><div class="t">틀색</div></div>
+    <div class="r"><div class="t">문구</div><input type="text" id="fourText" maxlength="30" placeholder="문구 입력 (비우면 날짜만)"></div>
+  </div>
   <div id="pvBar">
     <button id="pvClose">다시 찍기</button>
     <button id="pvShare">공유</button>
@@ -115,16 +150,18 @@ video,#mask{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none
 
 <video id="vid" playsinline muted autoplay></video>
 <canvas id="mask"></canvas>
+<input type="file" id="fileIn" accept="image/*">
 
 <script type="module">
-import {FaceLandmarker, FilesetResolver} from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs";
+import {FaceLandmarker, GestureRecognizer, FilesetResolver} from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs";
 
 const WASM = "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm";
 const MODEL = "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task";
+const GEST_MODEL = "https://storage.googleapis.com/mediapipe-models/gesture_recognizer/gesture_recognizer/float16/1/gesture_recognizer.task";
 
 const $ = id => document.getElementById(id);
 const vid = $('vid'), cv = $('gl'), mcv = $('mask');
-const mctx = mcv.getContext('2d', {willReadFrequently: false});
+const mctx = mcv.getContext('2d');
 
 /* ---------- 얼굴 랜드마크 인덱스 (MediaPipe Face Mesh) ---------- */
 const OVAL = [10,338,297,332,284,251,389,356,454,323,361,288,397,365,379,378,400,377,152,148,176,149,150,136,172,58,132,93,234,127,162,21,54,103,67,109];
@@ -153,15 +190,20 @@ const LIPS = ['#e8665a','#d9546e','#c41e3a','#c98a7a','#9e1b3f'];
 const BLUSH = ['#ff9e80','#ff8aa8','#ff7b6b','#e98fb8'];
 const RATIOS = {'3:4':3/4, '1:1':1, '9:16':9/16, '전체':0};
 const RORDER = ['3:4','1:1','9:16','전체'];
+const FRAME_COLS = ['#ffffff','#111111','#ffd6e0','#cfe8ff','#fff1bd','#d9f2d0'];
 
 /* ---------- 설정 저장 ---------- */
-const DEF = {filter:1,fAmt:80,smooth:50,bright:30,eye:30,slim:30,lip:-1,lipAmt:50,blush:-1,bluAmt:45,ratio:'3:4',timer:0,facing:'user'};
+const DEF = {filter:1,fAmt:80,smooth:50,bright:30,eye:30,slim:30,lip:-1,lipAmt:50,blush:-1,bluAmt:45,ratio:'3:4',timer:0,facing:'user',
+  palm:false, shotMode:'photo', fourLayout:'strip', fourCol:0, fourText:''};
 let S = {...DEF};
 try { Object.assign(S, JSON.parse(localStorage.getItem('ppossha') || '{}')); } catch(e) {}
-const save = () => { try { localStorage.setItem('ppossha', JSON.stringify(S)); } catch(e) {} };
+S.palm = false; // 손바닥 셔터는 켤 때마다 새로 준비
+let dirty = true;
+const save = () => { dirty = true; try { localStorage.setItem('ppossha', JSON.stringify(S)); } catch(e) {} };
 
 /* ---------- WebGL ---------- */
 const gl = cv.getContext('webgl', {preserveDrawingBuffer:true, antialias:false, premultipliedAlpha:false});
+const MAXTEX = Math.min(4096, gl.getParameter(gl.MAX_TEXTURE_SIZE) || 4096);
 const VS = `attribute vec2 a; varying vec2 v;
 void main(){ v=vec2((a.x+1.0)*0.5,(1.0-a.y)*0.5); gl_Position=vec4(a,0.0,1.0); }`;
 const FS = `precision highp float;
@@ -236,12 +278,18 @@ function mkTex(unit){ const t = gl.createTexture(); gl.activeTexture(gl.TEXTURE0
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE); return t; }
 const texV = mkTex(0), texM = mkTex(1);
 gl.uniform1i(U.uV, 0); gl.uniform1i(U.uM, 1);
+const upV = src => { gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, texV); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, src); };
+const upM = () => { gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, texM); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, mcv); };
 
 const hex = h => [parseInt(h.slice(1,3),16)/255, parseInt(h.slice(3,5),16)/255, parseInt(h.slice(5,7),16)/255];
+const dist = (a,b) => Math.hypot(a[0]-b[0], a[1]-b[1]);
 
 /* ---------- 상태 ---------- */
-let stream = null, landmarker = null, lm = null, smLm = null, lastT = -1;
+let stream = null, fileset = null, landmarker = null, imgLandmarker = null, gest = null, gestLoading = false;
+let lm = null, smLm = null, lastT = -1;
+let mode = 'cam', editSrc = null, editLm = null;  // mode: 'cam' | 'edit'
 let crop = {ox:0, oy:0, sx:1, sy:1}, vdim = [0,0], orig = 0, busy = false;
+let palmCnt = 0, lastGest = 0, palmCool = 0;
 
 /* ---------- 마스크 (R=피부, G=입술, B=블러셔) ---------- */
 function drawMask(L){
@@ -252,7 +300,7 @@ function drawMask(L){
   const P = i => [L[i].x*W, L[i].y*H];
   const path = idx => idx.forEach((i,k) => { const [x,y] = P(i); k ? mctx.lineTo(x,y) : mctx.moveTo(x,y); });
   const poly = idx => { mctx.beginPath(); path(idx); mctx.closePath(); };
-  const a = P(234), b = P(454), fw = Math.hypot(a[0]-b[0], a[1]-b[1]);
+  const fw = dist(P(234), P(454));
   mctx.filter = `blur(${(fw*0.045).toFixed(1)}px)`;
   mctx.fillStyle = '#f00'; poly(OVAL); mctx.fill();
   mctx.filter = `blur(${(fw*0.018).toFixed(1)}px)`;
@@ -278,65 +326,44 @@ function drawMask(L){
 }
 
 /* ---------- 레이아웃 ---------- */
+function srcDims(){ return mode === 'edit' && editSrc ? [editSrc.width, editSrc.height] : [vid.videoWidth, vid.videoHeight]; }
 function layout(){
-  const vw = vid.videoWidth, vh = vid.videoHeight; if(!vw) return;
+  const [vw, vh] = srcDims(); if(!vw) return;
   vdim = [vw, vh];
   const st = $('stage').getBoundingClientRect();
-  let A = RATIOS[S.ratio] || (st.width/st.height);
-  const V = vw/vh; let sx = 1, sy = 1;
-  if(V > A) sx = A/V; else sy = V/A;
+  let sx = 1, sy = 1;
+  if(mode === 'cam'){
+    const A = RATIOS[S.ratio] || (st.width/st.height);
+    const V = vw/vh;
+    if(V > A) sx = A/V; else sy = V/A;
+  }
   crop = {ox:(1-sx)/2, oy:(1-sy)/2, sx, sy};
   cv.width = Math.round(vw*sx); cv.height = Math.round(vh*sy);
   const ca = cv.width/cv.height; let w = st.width, h = w/ca;
   if(h > st.height){ h = st.height; w = h*ca; }
   cv.style.width = w + 'px'; cv.style.height = h + 'px';
-  mcv.width = 320; mcv.height = Math.round(320*vh/vw);
+  mcv.width = 320; mcv.height = Math.max(1, Math.round(320*vh/vw));
   gl.viewport(0, 0, cv.width, cv.height);
+  dirty = true;
 }
 window.addEventListener('resize', () => setTimeout(layout, 100));
 
-/* ---------- 렌더 루프 ---------- */
-const dist = (a,b) => Math.hypot(a[0]-b[0], a[1]-b[1]);
-function loop(){
-  requestAnimationFrame(loop);
-  if(vid.readyState < 2) return;
-  if(vid.videoWidth !== vdim[0] || vid.videoHeight !== vdim[1]) layout();
-  const vw = vdim[0], vh = vdim[1];
-
-  if(landmarker && vid.currentTime !== lastT){
-    lastT = vid.currentTime;
-    try {
-      const r = landmarker.detectForVideo(vid, performance.now());
-      const f = r.faceLandmarks && r.faceLandmarks[0];
-      if(f){
-        if(!smLm || smLm.length !== f.length) smLm = f.map(p => ({x:p.x, y:p.y}));
-        else for(let i=0;i<f.length;i++){ smLm[i].x = smLm[i].x*0.45 + f[i].x*0.55; smLm[i].y = smLm[i].y*0.45 + f[i].y*0.55; }
-        lm = smLm;
-      } else { lm = null; smLm = null; }
-    } catch(e) { lm = null; }
-    drawMask(lm);
-    gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, texM);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, mcv);
-  }
-
-  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, texV);
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, vid);
-
+/* ---------- 그리기 ---------- */
+function render(L, vw, vh, mirror){
   gl.uniform2f(U.uRes, vw, vh);
   gl.uniform2f(U.uOff, crop.ox, crop.oy); gl.uniform2f(U.uSc, crop.sx, crop.sy);
-  gl.uniform1f(U.uMir, S.facing === 'user' ? 1 : 0);
+  gl.uniform1f(U.uMir, mirror ? 1 : 0);
   gl.uniform1f(U.uOrig, orig);
-  gl.uniform1f(U.uFace, lm ? 1 : 0);
-  if(lm){
-    const Q = i => [lm[i].x*vw, lm[i].y*vh];
-    const ctr = idx => { let x=0,y=0; idx.forEach(i => { x += lm[i].x; y += lm[i].y; }); return [x/idx.length*vw, y/idx.length*vh]; };
+  gl.uniform1f(U.uFace, L ? 1 : 0);
+  if(L){
+    const Q = i => [L[i].x*vw, L[i].y*vh];
+    const ctr = idx => { let x=0,y=0; idx.forEach(i => { x += L[i].x; y += L[i].y; }); return [x/idx.length*vw, y/idx.length*vh]; };
     const fw = dist(Q(234), Q(454));
     const lc = ctr(LEYE), rc = ctr(REYE);
     gl.uniform2fv(U['uEyeC[0]'], [lc[0], lc[1], rc[0], rc[1]]);
     gl.uniform1fv(U['uEyeR[0]'], [dist(Q(33),Q(133))*1.15, dist(Q(362),Q(263))*1.15]);
     gl.uniform1f(U.uEye, S.eye/100*0.26);
-    const j = [Q(172), Q(136), Q(397), Q(365)];
-    gl.uniform2fv(U['uJaw[0]'], j.flat());
+    gl.uniform2fv(U['uJaw[0]'], [Q(172), Q(136), Q(397), Q(365)].flat());
     const n = Q(4), ch = Q(152);
     gl.uniform2f(U.uJawT, (n[0]+ch[0])/2, (n[1]+ch[1])/2);
     gl.uniform1f(U.uJawR, fw*0.32);
@@ -353,8 +380,54 @@ function loop(){
   gl.uniform3fv(U.uMul, F.mul); gl.uniform3fv(U.uAdd, F.add);
   gl.uniform1f(U.uSat, F.sat); gl.uniform1f(U.uCon, F.con); gl.uniform1f(U.uFade, F.fade);
   gl.uniform1f(U.uVig, F.vig); gl.uniform1f(U.uGrain, F.grain);
-  gl.uniform1f(U.uFAmt, S.fAmt/100); gl.uniform1f(U.uTime, (performance.now()%1000)/10);
+  gl.uniform1f(U.uFAmt, S.fAmt/100); gl.uniform1f(U.uTime, mode === 'edit' ? 1.0 : (performance.now()%1000)/10);
   gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+}
+
+/* ---------- 렌더 루프 ---------- */
+function loop(){
+  requestAnimationFrame(loop);
+  if(mode === 'edit'){
+    if(!dirty || !editSrc) return;
+    dirty = false;
+    drawMask(editLm); upM();
+    render(editLm, vdim[0], vdim[1], false);
+    return;
+  }
+  if(vid.readyState < 2) return;
+  if(vid.videoWidth !== vdim[0] || vid.videoHeight !== vdim[1]) layout();
+  const vw = vdim[0], vh = vdim[1];
+  const now = performance.now();
+
+  if(landmarker && vid.currentTime !== lastT){
+    lastT = vid.currentTime;
+    try {
+      const r = landmarker.detectForVideo(vid, now);
+      const f = r.faceLandmarks && r.faceLandmarks[0];
+      if(f){
+        if(!smLm || smLm.length !== f.length) smLm = f.map(p => ({x:p.x, y:p.y}));
+        else for(let i=0;i<f.length;i++){ smLm[i].x = smLm[i].x*0.45 + f[i].x*0.55; smLm[i].y = smLm[i].y*0.45 + f[i].y*0.55; }
+        lm = smLm;
+      } else { lm = null; smLm = null; }
+    } catch(e) { lm = null; }
+    drawMask(lm); upM();
+  }
+
+  // 손바닥 셔터: 0.15초마다 확인, 연속 3번 보이면 촬영
+  if(S.palm && gest && !busy && $('preview').hidden && now - lastGest > 150){
+    lastGest = now;
+    try {
+      const r = gest.recognizeForVideo(vid, now);
+      const g = r.gestures && r.gestures[0] && r.gestures[0][0];
+      const hit = g && g.categoryName === 'Open_Palm' && g.score > 0.6;
+      palmCnt = hit ? palmCnt + 1 : 0;
+      $('palmDot').classList.toggle('hit', !!hit);
+      if(palmCnt >= 3 && now > palmCool){ palmCnt = 0; palmCool = now + 2500; $('palmDot').classList.remove('hit'); shoot(true); }
+    } catch(e) {}
+  }
+
+  upV(vid);
+  render(lm, vw, vh, S.facing === 'user');
 }
 
 /* ---------- 카메라 ---------- */
@@ -371,17 +444,58 @@ async function startCam(){
   layout();
   return true;
 }
-
+async function getFs(){ if(!fileset) fileset = await FilesetResolver.forVisionTasks(WASM); return fileset; }
+async function createFace(runningMode){
+  const fs = await getFs();
+  const opt = d => ({baseOptions:{modelAssetPath:MODEL, delegate:d}, runningMode, numFaces:1});
+  try { return await FaceLandmarker.createFromOptions(fs, opt('GPU')); }
+  catch(e) { return await FaceLandmarker.createFromOptions(fs, opt('CPU')); }
+}
 async function initFace(){
   $('loadTxt').textContent = '얼굴 인식 준비 중…';
+  try { landmarker = await createFace('VIDEO'); }
+  catch(e) { toast('얼굴 인식을 불러오지 못했어요. 필터만 사용할 수 있어요.', 4000); }
+}
+async function ensureGesture(){
+  if(gest || gestLoading) return !!gest;
+  gestLoading = true; toast('손바닥 인식 준비 중…', 3000);
   try {
-    const fs = await FilesetResolver.forVisionTasks(WASM);
-    const opt = d => ({baseOptions:{modelAssetPath:MODEL, delegate:d}, runningMode:'VIDEO', numFaces:1});
-    try { landmarker = await FaceLandmarker.createFromOptions(fs, opt('GPU')); }
-    catch(e) { landmarker = await FaceLandmarker.createFromOptions(fs, opt('CPU')); }
-  } catch(e) {
-    toast('얼굴 인식을 불러오지 못했어요. 필터만 사용할 수 있어요.', 4000);
-  }
+    const fs = await getFs();
+    const opt = d => ({baseOptions:{modelAssetPath:GEST_MODEL, delegate:d}, runningMode:'VIDEO', numHands:1});
+    try { gest = await GestureRecognizer.createFromOptions(fs, opt('GPU')); }
+    catch(e) { gest = await GestureRecognizer.createFromOptions(fs, opt('CPU')); }
+  } catch(e) { gest = null; }
+  gestLoading = false;
+  return !!gest;
+}
+
+/* ---------- 사진 보정(갤러리) ---------- */
+async function enterEdit(file){
+  const url = URL.createObjectURL(file);
+  const img = new Image(); img.src = url;
+  try { await img.decode(); } catch(e) { URL.revokeObjectURL(url); toast('사진을 열 수 없어요'); return; }
+  let w = img.naturalWidth, h = img.naturalHeight;
+  const sc = Math.min(1, MAXTEX/Math.max(w, h)); w = Math.round(w*sc); h = Math.round(h*sc);
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  c.getContext('2d').drawImage(img, 0, 0, w, h); URL.revokeObjectURL(url);
+  editSrc = c; editLm = null; mode = 'edit';
+  setModeUI(); upV(c); layout();
+  toast('얼굴 찾는 중…', 5000);
+  try {
+    if(!imgLandmarker) imgLandmarker = await createFace('IMAGE');
+    const r = imgLandmarker.detect(c);
+    editLm = (r.faceLandmarks && r.faceLandmarks[0]) || null;
+    toast(editLm ? '보정을 적용했어요' : '얼굴을 찾지 못했어요 (필터만 적용)', 1800);
+  } catch(e) { toast('얼굴 인식에 실패했어요 (필터만 적용)', 1800); }
+  dirty = true;
+}
+function exitEdit(){ mode = 'cam'; editSrc = null; editLm = null; setModeUI(); layout(); }
+function setModeUI(){
+  const ed = mode === 'edit';
+  $('bGallery').classList.toggle('hid', ed); $('bBack').classList.toggle('hid', !ed);
+  $('camBtns').classList.toggle('hid', ed); $('modes').classList.toggle('hid', ed);
+  $('palmDot').classList.toggle('hid', ed || !S.palm);
+  const b = $('bShot'); b.textContent = ed ? '저장' : ''; b.classList.toggle('four', !ed && S.shotMode === 'four');
 }
 
 /* ---------- UI ---------- */
@@ -438,33 +552,169 @@ const setRatioLabel = () => $('bRatio').textContent = S.ratio;
 setRatioLabel();
 $('bRatio').onclick = () => { S.ratio = RORDER[(RORDER.indexOf(S.ratio)+1) % RORDER.length]; save(); setRatioLabel(); layout(); };
 
-const setTimerLabel = () => $('bTimer').textContent = S.timer ? `타이머 ${S.timer}초` : '타이머 끔';
+const setTimerLabel = () => $('bTimer').textContent = S.timer ? `⏱ ${S.timer}초` : '⏱ 끔';
 setTimerLabel();
 $('bTimer').onclick = () => { S.timer = S.timer === 0 ? 3 : S.timer === 3 ? 10 : 0; save(); setTimerLabel(); };
 
 $('bFlip').onclick = async () => { S.facing = S.facing === 'user' ? 'environment' : 'user'; save(); smLm = null; lm = null; await startCam(); };
 
+const setPalmLabel = () => { $('bPalm').textContent = S.palm ? '✋ 켬' : '✋ 끔'; $('bPalm').classList.toggle('on', S.palm); $('palmDot').classList.toggle('hid', !S.palm || mode === 'edit'); };
+setPalmLabel();
+$('bPalm').onclick = async () => {
+  if(S.palm){ S.palm = false; setPalmLabel(); return; }
+  const ok = await ensureGesture();
+  if(!ok){ toast('손바닥 인식을 불러오지 못했어요', 2500); return; }
+  S.palm = true; palmCnt = 0; setPalmLabel();
+  toast('손바닥을 보여주면 3초 뒤 찍혀요', 2200);
+};
+
+document.querySelectorAll('#modes button').forEach(b => b.onclick = () => {
+  S.shotMode = b.dataset.m; save();
+  document.querySelectorAll('#modes button').forEach(x => x.classList.toggle('on', x === b));
+  setModeUI();
+  if(S.shotMode === 'four') toast('네컷: 3초 간격으로 4장 찍어요', 2000);
+});
+document.querySelectorAll('#modes button').forEach(x => x.classList.toggle('on', x.dataset.m === S.shotMode));
+
+$('bGallery').onclick = () => { $('fileIn').value = ''; $('fileIn').click(); };
+$('fileIn').onchange = e => { const f = e.target.files && e.target.files[0]; if(f) enterEdit(f); };
+$('bBack').onclick = exitEdit;
+
 const cmp = $('bCompare');
-const on = e => { e.preventDefault(); orig = 1; cmp.textContent = '원본 보기'; };
-const off = () => { orig = 0; cmp.textContent = '원본'; };
+const on = e => { e.preventDefault(); orig = 1; dirty = true; cmp.textContent = '원본 보기'; };
+const off = () => { if(orig){ orig = 0; dirty = true; } cmp.textContent = '원본'; };
 cmp.addEventListener('pointerdown', on); ['pointerup','pointerleave','pointercancel'].forEach(t => cmp.addEventListener(t, off));
 
 /* ---------- 촬영 ---------- */
-let lastBlob = null, lastUrl = null;
+let lastBlob = null, lastUrl = null, fourFrames = [];
 const sleep = ms => new Promise(r => setTimeout(r, ms));
-$('bShot').onclick = async () => {
-  if(busy || vid.readyState < 2) return; busy = true;
-  for(let t = S.timer; t > 0; t--){ $('count').textContent = t; await sleep(1000); }
+const frames2 = () => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+const toBlob = c => new Promise(r => c.toBlob(r, 'image/jpeg', 0.95));
+
+async function countdown(n, label){
+  const st = $('step');
+  if(label){ st.textContent = label; st.classList.remove('hid'); }
+  for(let t = n; t > 0; t--){ $('count').textContent = t; await sleep(1000); }
   $('count').textContent = '';
-  orig = 0;
-  await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+}
+async function grab(){
+  orig = 0; dirty = true;
+  await frames2();
   const fl = $('flash'); fl.style.transition = 'none'; fl.style.opacity = .85;
-  const blob = await new Promise(r => cv.toBlob(r, 'image/jpeg', 0.95));
+  const c = document.createElement('canvas'); c.width = cv.width; c.height = cv.height;
+  c.getContext('2d').drawImage(cv, 0, 0);
   requestAnimationFrame(() => { fl.style.transition = 'opacity .3s'; fl.style.opacity = 0; });
-  if(!blob){ toast('촬영에 실패했어요'); busy = false; return; }
+  return c;
+}
+async function shoot(byPalm){
+  if(busy) return;
+  if(mode === 'edit'){
+    busy = true; const c = await grab(); const b = await toBlob(c); busy = false;
+    if(b) showPreview(b, false); else toast('저장에 실패했어요');
+    return;
+  }
+  if(vid.readyState < 2) return;
+  busy = true;
+  try {
+    if(S.shotMode === 'four'){
+      fourFrames = [];
+      for(let k = 0; k < 4; k++){
+        const n = k === 0 ? Math.max(3, S.timer) : 3;
+        await countdown(n, `${k+1} / 4`);
+        fourFrames.push(await grab());
+        await sleep(350);
+      }
+      $('step').classList.add('hid');
+      const b = await composeFour();
+      if(b) showPreview(b, true);
+    } else {
+      const n = byPalm ? Math.max(3, S.timer) : S.timer;
+      await countdown(n);
+      const c = await grab();
+      const b = await toBlob(c);
+      if(b) showPreview(b, false); else toast('촬영에 실패했어요');
+    }
+  } finally {
+    busy = false; $('step').classList.add('hid'); $('count').textContent = '';
+  }
+}
+$('bShot').onclick = () => shoot(false);
+
+/* ---------- 네컷 합성 ---------- */
+function drawCover(ctx, src, x, y, w, h){
+  const s = Math.max(w/src.width, h/src.height);
+  const sw = w/s, sh = h/s, sx = (src.width - sw)/2, sy = (src.height - sh)/2;
+  ctx.drawImage(src, sx, sy, sw, sh, x, y, w, h);
+}
+function isDark(hexc){ const [r,g,b] = hex(hexc); return r*.299 + g*.587 + b*.114 < .5; }
+async function composeFour(){
+  const K = 1.6, M = 34*K, G = 18*K, B = 170*K;
+  const strip = S.fourLayout === 'strip';
+  const cw = (strip ? 600 : 540)*K, ch = (strip ? 450 : 720)*K;
+  const cols = strip ? 1 : 2, rows = strip ? 4 : 2;
+  const W = Math.round(M*2 + cw*cols + G*(cols-1));
+  const H = Math.round(M + ch*rows + G*(rows-1) + B);
+  const c = document.createElement('canvas'); c.width = W; c.height = H;
+  const x = c.getContext('2d');
+  const bg = FRAME_COLS[S.fourCol] || '#ffffff';
+  x.fillStyle = bg; x.fillRect(0, 0, W, H);
+  fourFrames.forEach((f, i) => {
+    const cx = M + (i % cols)*(cw + G), cy = M + Math.floor(i / cols)*(ch + G);
+    x.save(); x.beginPath();
+    const r = 10*K;
+    x.moveTo(cx+r, cy); x.arcTo(cx+cw, cy, cx+cw, cy+ch, r); x.arcTo(cx+cw, cy+ch, cx, cy+ch, r);
+    x.arcTo(cx, cy+ch, cx, cy, r); x.arcTo(cx, cy, cx+cw, cy, r); x.closePath(); x.clip();
+    drawCover(x, f, cx, cy, cw, ch); x.restore();
+  });
+  const d = new Date(), z = n => String(n).padStart(2,'0');
+  const date = `${d.getFullYear()}.${z(d.getMonth()+1)}.${z(d.getDate())}`;
+  const fg = isDark(bg) ? '#ffffff' : '#222222';
+  const by = H - B;
+  x.fillStyle = fg; x.textAlign = 'center'; x.textBaseline = 'middle';
+  const txt = (S.fourText || '').trim();
+  if(txt){
+    x.font = `700 ${Math.round(44*K)}px -apple-system, "Noto Sans KR", sans-serif`;
+    x.fillText(txt, W/2, by + B*0.42);
+    x.globalAlpha = .6; x.font = `500 ${Math.round(26*K)}px -apple-system, "Noto Sans KR", sans-serif`;
+    x.fillText(`${date} · 뽀샤캠`, W/2, by + B*0.75);
+  } else {
+    x.font = `700 ${Math.round(40*K)}px -apple-system, "Noto Sans KR", sans-serif`;
+    x.fillText(date, W/2, by + B*0.45);
+    x.globalAlpha = .55; x.font = `500 ${Math.round(24*K)}px -apple-system, "Noto Sans KR", sans-serif`;
+    x.fillText('뽀샤캠', W/2, by + B*0.75);
+  }
+  x.globalAlpha = 1;
+  return await toBlob(c);
+}
+
+/* ---------- 미리보기 ---------- */
+function setPreviewImg(blob){
   lastBlob = blob; if(lastUrl) URL.revokeObjectURL(lastUrl); lastUrl = URL.createObjectURL(blob);
-  $('pvImg').src = lastUrl; $('preview').hidden = false; busy = false;
-};
+  $('pvImg').src = lastUrl;
+}
+function syncFourOpts(){
+  document.querySelectorAll('#pvOpts .seg').forEach(b => b.classList.toggle('on', b.dataset.l === S.fourLayout));
+  document.querySelectorAll('#frameCols .dot').forEach((d, i) => d.classList.toggle('on', i === S.fourCol));
+}
+function showPreview(blob, four){
+  setPreviewImg(blob);
+  $('pvOpts').classList.toggle('hid', !four);
+  if(four){ $('fourText').value = S.fourText || ''; syncFourOpts(); }
+  $('preview').hidden = false;
+}
+FRAME_COLS.forEach((col, i) => {
+  const b = document.createElement('button'); b.className = 'dot'; b.style.background = col;
+  if(col === '#111111') b.style.boxShadow = 'inset 0 0 0 1px #444';
+  b.onclick = async () => { S.fourCol = i; save(); syncFourOpts(); const bl = await composeFour(); if(bl) setPreviewImg(bl); };
+  $('frameCols').appendChild(b);
+});
+document.querySelectorAll('#pvOpts .seg').forEach(b => b.onclick = async () => {
+  S.fourLayout = b.dataset.l; save(); syncFourOpts(); const bl = await composeFour(); if(bl) setPreviewImg(bl);
+});
+let textT;
+$('fourText').oninput = e => { S.fourText = e.target.value; save(); clearTimeout(textT);
+  textT = setTimeout(async () => { const bl = await composeFour(); if(bl) setPreviewImg(bl); }, 350); };
+
 const fname = () => { const d = new Date(), z = n => String(n).padStart(2,'0');
   return `ppossha_${d.getFullYear()}${z(d.getMonth()+1)}${z(d.getDate())}_${z(d.getHours())}${z(d.getMinutes())}${z(d.getSeconds())}.jpg`; };
 $('pvClose').onclick = () => { $('preview').hidden = true; };
@@ -481,6 +731,7 @@ $('pvShare').onclick = async () => {
 };
 
 /* ---------- 시작 ---------- */
+setModeUI();
 (async () => {
   if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
     $('loadTxt').textContent = '이 주소에서는 카메라를 쓸 수 없어요. https 주소로 열어 주세요.'; return;
