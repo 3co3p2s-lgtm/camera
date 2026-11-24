@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<meta name="mobile-web-app-capable" content="yes">
+<title>뽀샤캠</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+html,body{margin:0;height:100%;background:#000;color:#fff;font-family:-apple-system,"Pretendard","Noto Sans KR",sans-serif;overflow:hidden;touch-action:manipulation}
+#app{position:fixed;inset:0;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}
+#top{height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 14px;flex:none}
+#top .grp{display:flex;gap:8px}
+.tb{background:rgba(255,255,255,.12);border:0;color:#fff;font-size:14px;height:34px;min-width:52px;padding:0 12px;border-radius:17px}
+#brand{font-weight:700;letter-spacing:.5px;font-size:16px}
+#stage{flex:1;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;min-height:0}
+#gl{display:block;border-radius:6px}
+#flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;transition:opacity .25s}
+#count{position:absolute;font-size:96px;font-weight:700;text-shadow:0 2px 12px rgba(0,0,0,.5);pointer-events:none}
+#msg{position:absolute;left:50%;top:14px;transform:translateX(-50%);background:rgba(0,0,0,.6);padding:7px 14px;border-radius:16px;font-size:13px;white-space:nowrap;pointer-events:none;transition:opacity .3s}
+#panel{flex:none;background:#0d0d0d;padding:6px 0 0}
+#panel.hide .pane,#panel.hide #tabs{display:none}
+#tabs{display:flex;justify-content:center;gap:26px;padding:4px 0 8px}
+#tabs button{background:none;border:0;color:#888;font-size:15px;padding:4px 2px;border-bottom:2px solid transparent}
+#tabs button.on{color:#fff;border-color:#ff6f91}
+.pane{display:none;padding:0 16px 6px}
+.pane.on{display:block}
+.hscroll{display:flex;gap:12px;overflow-x:auto;padding:4px 2px 10px;scrollbar-width:none}
+.hscroll::-webkit-scrollbar{display:none}
+.chip{flex:none;display:flex;flex-direction:column;align-items:center;gap:5px;font-size:12px;color:#bbb;background:none;border:0;padding:0}
+.chip i{display:block;width:54px;height:54px;border-radius:14px;border:2px solid transparent}
+.chip.on{color:#fff}.chip.on i{border-color:#ff6f91}
+.row{display:flex;align-items:center;gap:12px;height:38px}
+.row label{width:52px;font-size:13px;color:#ccc;flex:none}
+.row span{width:30px;text-align:right;font-size:12px;color:#888;flex:none}
+input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:4px;border-radius:2px;background:#333;outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.4)}
+.sw{display:flex;gap:10px;align-items:center;height:40px}
+.sw .t{width:52px;font-size:13px;color:#ccc;flex:none}
+.dot{width:30px;height:30px;border-radius:50%;border:2px solid transparent;flex:none;padding:0}
+.dot.on{border-color:#fff;box-shadow:0 0 0 2px #ff6f91}
+.dot.none{background:#222;color:#888;font-size:11px}
+#bottom{flex:none;height:112px;display:flex;align-items:center;justify-content:space-around;background:#0d0d0d}
+.side{width:64px;height:44px;border:0;border-radius:22px;background:rgba(255,255,255,.1);color:#fff;font-size:13px}
+#bShot{width:76px;height:76px;border-radius:50%;border:5px solid #fff;background:#ff6f91;box-shadow:inset 0 0 0 4px #0d0d0d}
+#bShot:active{transform:scale(.93)}
+#loading{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:#000;z-index:5;font-size:14px;color:#ccc;text-align:center;padding:24px}
+#loading b{font-size:22px;color:#fff}
+#preview{position:fixed;inset:0;background:#000;z-index:10;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}
+#preview[hidden]{display:none}
+#pvWrap{flex:1;display:flex;align-items:center;justify-content:center;min-height:0;padding:12px}
+#pvImg{max-width:100%;max-height:100%;border-radius:6px}
+#pvBar{height:90px;display:flex;align-items:center;justify-content:space-around}
+#pvBar button{height:46px;min-width:92px;border-radius:23px;border:0;font-size:15px;background:rgba(255,255,255,.12);color:#fff}
+#pvBar #pvSave{background:#ff6f91}
+video,#mask{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="top">
+    <div id="brand">뽀샤캠</div>
+    <div class="grp">
+      <button class="tb" id="bRatio">3:4</button>
+      <button class="tb" id="bTimer">타이머 끔</button>
+      <button class="tb" id="bFlip">전환</button>
+    </div>
+  </div>
+  <div id="stage">
+    <canvas id="gl"></canvas>
+    <div id="flash"></div>
+    <div id="count"></div>
+    <div id="msg" style="opacity:0"></div>
+    <div id="loading"><b>뽀샤캠</b><div id="loadTxt">카메라를 켜는 중…</div></div>
+  </div>
+  <div id="panel">
+    <div id="tabs">
+      <button data-t="pFilter" class="on">필터</button>
+      <button data-t="pBeauty">뷰티</button>
+      <button data-t="pMakeup">메이크업</button>
+    </div>
+    <div id="pFilter" class="pane on">
+      <div id="filters" class="hscroll"></div>
+      <div class="row"><label>강도</label><input type="range" id="sFAmt" min="0" max="100"><span id="vFAmt"></span></div>
+    </div>
+    <div id="pBeauty" class="pane">
+      <div class="row"><label>피부결</label><input type="range" id="sSmooth" min="0" max="100"><span id="vSmooth"></span></div>
+      <div class="row"><label>화사함</label><input type="range" id="sBright" min="0" max="100"><span id="vBright"></span></div>
+      <div class="row"><label>큰 눈</label><input type="range" id="sEye" min="0" max="100"><span id="vEye"></span></div>
+      <div class="row"><label>갸름</label><input type="range" id="sSlim" min="0" max="100"><span id="vSlim"></span></div>
+    </div>
+    <div id="pMakeup" class="pane">
+      <div class="sw" id="lipSw"><div class="t">립</div></div>
+      <div class="row"><label>립 농도</label><input type="range" id="sLipAmt" min="0" max="100"><span id="vLipAmt"></span></div>
+      <div class="sw" id="bluSw"><div class="t">블러셔</div></div>
+      <div class="row"><label>블러셔</label><input type="range" id="sBluAmt" min="0" max="100"><span id="vBluAmt"></span></div>
+    </div>
+  </div>
+  <div id="bottom">
+    <button class="side" id="bCompare">원본</button>
+    <button id="bShot" aria-label="촬영"></button>
+    <button class="side" id="bPanel">접기</button>
+  </div>
+</div>
+
+<div id="preview" hidden>
+  <div id="pvWrap"><img id="pvImg" alt=""></div>
+  <div id="pvBar">
+    <button id="pvClose">다시 찍기</button>
+    <button id="pvShare">공유</button>
+    <button id="pvSave">저장</button>
+  </div>
+</div>
+
+<video id="vid" playsinline muted autoplay></video>
+<canvas id="mask"></canvas>
+
+<script type="module">
+import {FaceLandmarker, FilesetResolver} from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs";
+
+const WASM = "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm";
+const MODEL = "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task";
+
+const $ = id => document.getElementById(id);
+const vid = $('vid'), cv = $('gl'), mcv = $('mask');
+const mctx = mcv.getContext('2d', {willReadFrequently: false});
+
+/* ---------- 얼굴 랜드마크 인덱스 (MediaPipe Face Mesh) ---------- */
+const OVAL = [10,338,297,332,284,251,389,356,454,323,361,288,397,365,379,378,400,377,152,148,176,149,150,136,172,58,132,93,234,127,162,21,54,103,67,109];
+const LIP_O = [61,185,40,39,37,0,267,269,270,409,291,375,321,405,314,17,84,181,91,146];
+const LIP_I = [78,191,80,81,82,13,312,311,310,415,308,324,318,402,317,14,87,178,88,95];
+const LEYE = [33,7,163,144,145,153,154,155,133,173,157,158,159,160,161,246];
+const REYE = [263,249,390,373,374,380,381,382,362,398,384,385,386,387,388,466];
+const LBROW = [70,63,105,66,107,55,65,52,53,46];
+const RBROW = [300,293,334,296,336,285,295,282,283,276];
+
+/* ---------- 필터 프리셋 ---------- */
+const FILTERS = [
+  {n:'원본',   mul:[1,1,1],          add:[0,0,0],            sat:1,    con:1,    fade:0,   vig:0,   grain:0},
+  {n:'뽀얀',   mul:[1.03,1.02,1.03], add:[.05,.04,.05],      sat:.88,  con:.92,  fade:.06, vig:0,   grain:0},
+  {n:'데일리', mul:[1.03,1.0,.98],   add:[.015,.01,.01],     sat:1.06, con:1.04, fade:0,   vig:.1,  grain:0},
+  {n:'피치',   mul:[1.06,1.0,.97],   add:[.05,.025,.02],     sat:.96,  con:.95,  fade:.04, vig:0,   grain:0},
+  {n:'코랄',   mul:[1.08,.98,.94],   add:[.03,.01,0],        sat:1.1,  con:1.02, fade:0,   vig:.1,  grain:0},
+  {n:'쿨톤',   mul:[.95,1.0,1.08],   add:[0,.01,.035],       sat:.95,  con:1.0,  fade:.03, vig:0,   grain:0},
+  {n:'청량',   mul:[.97,1.03,1.06],  add:[0,.02,.03],        sat:1.12, con:1.06, fade:0,   vig:0,   grain:0},
+  {n:'필름',   mul:[1.05,1.0,.9],    add:[.02,.012,.035],    sat:.85,  con:1.08, fade:.12, vig:.25, grain:.06},
+  {n:'빈티지', mul:[1.1,1.0,.85],    add:[.03,.02,.05],      sat:.7,   con:.9,   fade:.15, vig:.35, grain:.08},
+  {n:'선셋',   mul:[1.12,1.0,.86],   add:[.04,0,0],          sat:1.15, con:1.03, fade:0,   vig:.2,  grain:0},
+  {n:'흑백',   mul:[1,1,1],          add:[0,0,0],            sat:0,    con:1.12, fade:.04, vig:.15, grain:.03},
+];
+const LIPS = ['#e8665a','#d9546e','#c41e3a','#c98a7a','#9e1b3f'];
+const BLUSH = ['#ff9e80','#ff8aa8','#ff7b6b','#e98fb8'];
+const RATIOS = {'3:4':3/4, '1:1':1, '9:16':9/16, '전체':0};
+const RORDER = ['3:4','1:1','9:16','전체'];
+
+/* ---------- 설정 저장 ---------- */
+const DEF = {filter:1,fAmt:80,smooth:50,bright:30,eye:30,slim:30,lip:-1,lipAmt:50,blush:-1,bluAmt:45,ratio:'3:4',timer:0,facing:'user'};
+let S = {...DEF};
+try { Object.assign(S, JSON.parse(localStorage.getItem('ppossha') || '{}')); } catch(e) {}
+const save = () => { try { localStorage.setItem('ppossha', JSON.stringify(S)); } catch(e) {} };
+
+/* ---------- WebGL ---------- */
+const gl = cv.getContext('webgl', {preserveDrawingBuffer:true, antialias:false, premultipliedAlpha:false});
+const VS = `attribute vec2 a; varying vec2 v;
+void main(){ v=vec2((a.x+1.0)*0.5,(1.0-a.y)*0.5); gl_Position=vec4(a,0.0,1.0); }`;
+const FS = `precision highp float;
+varying vec2 v;
+uniform sampler2D uV, uM;
+uniform vec2 uRes, uOff, uSc;
+uniform float uMir, uOrig, uFace;
+uniform vec2 uEyeC[2]; uniform float uEyeR[2]; uniform float uEye;
+uniform vec2 uJaw[4]; uniform vec2 uJawT; uniform float uJawR, uSlim;
+uniform float uSm, uSmR, uBr;
+uniform vec3 uLipC, uBluC; uniform float uLip, uBlu;
+uniform vec3 uMul, uAdd; uniform float uSat, uCon, uFade, uVig, uGrain, uFAmt, uTime;
+float luma(vec3 c){ return dot(c, vec3(0.299,0.587,0.114)); }
+vec3 overlay(vec3 b, vec3 s){ return mix(2.0*b*s, 1.0-2.0*(1.0-b)*(1.0-s), step(0.5,b)); }
+float hash(vec2 p){ return fract(sin(dot(p, vec2(12.9898,78.233)))*43758.5453); }
+void main(){
+  vec2 uv = uOff + v*uSc;
+  if(uMir > 0.5) uv.x = 1.0 - uv.x;
+  if(uOrig > 0.5){ gl_FragColor = vec4(texture2D(uV, uv).rgb, 1.0); return; }
+  vec2 p = uv*uRes;
+  if(uFace > 0.5){
+    for(int i=0;i<2;i++){
+      vec2 d = p - uEyeC[i];
+      float t = length(d)/uEyeR[i];
+      if(t < 1.0){ p = uEyeC[i] + d*(1.0 - uEye*(1.0 - t*t)); }
+    }
+    for(int j=0;j<4;j++){
+      vec2 d = p - uJaw[j];
+      float q = dot(d,d)/(uJawR*uJawR);
+      if(q < 1.0){ float w = 1.0 - q; w *= w; p -= (uJawT - uJaw[j])*uSlim*w; }
+    }
+  }
+  uv = p/uRes;
+  vec3 c = texture2D(uV, uv).rgb;
+  vec3 m = texture2D(uM, uv).rgb;
+  if(m.r > 0.01 && uSm > 0.0){
+    vec3 s = c; float ws = 1.0;
+    for(int k=0;k<12;k++){
+      float a = float(k)*0.5236;
+      vec2 o1 = vec2(cos(a), sin(a))*uSmR/uRes;
+      vec2 o2 = vec2(cos(a+0.2618), sin(a+0.2618))*uSmR*2.2/uRes;
+      vec3 c1 = texture2D(uV, uv+o1).rgb; vec3 e1 = c1 - c; float w1 = exp(-dot(e1,e1)*55.0);
+      vec3 c2 = texture2D(uV, uv+o2).rgb; vec3 e2 = c2 - c; float w2 = exp(-dot(e2,e2)*55.0)*0.8;
+      s += c1*w1 + c2*w2; ws += w1 + w2;
+    }
+    c = mix(c, s/ws, m.r*uSm);
+    c = mix(c, 1.0 - (1.0-c)*(1.0-c), m.r*uBr*0.45);
+  }
+  if(m.g > 0.01 && uLip > 0.0){ c = mix(c, overlay(c, uLipC), clamp(m.g,0.0,1.0)*uLip); }
+  if(m.b > 0.01 && uBlu > 0.0){ c = mix(c, overlay(c, uBluC), clamp(m.b,0.0,1.0)*uBlu*0.55); }
+  vec3 f = c*uMul + uAdd;
+  f = mix(vec3(luma(f)), f, uSat);
+  f = (f - 0.5)*uCon + 0.5;
+  f = mix(f, f*0.85 + 0.12, uFade);
+  vec2 vc = v - 0.5; f *= 1.0 - uVig*dot(vc,vc)*2.0;
+  f += (hash(v*uRes + uTime) - 0.5)*uGrain;
+  c = mix(c, f, uFAmt);
+  gl_FragColor = vec4(clamp(c, 0.0, 1.0), 1.0);
+}`;
+function sh(type, src){ const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s);
+  if(!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s)); return s; }
+const prog = gl.createProgram();
+gl.attachShader(prog, sh(gl.VERTEX_SHADER, VS)); gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, FS));
+gl.linkProgram(prog); gl.useProgram(prog);
+const buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1,1,-1,-1,1,1,1]), gl.STATIC_DRAW);
+const aLoc = gl.getAttribLocation(prog, 'a'); gl.enableVertexAttribArray(aLoc); gl.vertexAttribPointer(aLoc, 2, gl.FLOAT, false, 0, 0);
+const U = {}; ['uV','uM','uRes','uOff','uSc','uMir','uOrig','uFace','uEyeC[0]','uEyeR[0]','uEye','uJaw[0]','uJawT','uJawR','uSlim','uSm','uSmR','uBr','uLipC','uBluC','uLip','uBlu','uMul','uAdd','uSat','uCon','uFade','uVig','uGrain','uFAmt','uTime']
+  .forEach(n => U[n] = gl.getUniformLocation(prog, n));
+function mkTex(unit){ const t = gl.createTexture(); gl.activeTexture(gl.TEXTURE0+unit); gl.bindTexture(gl.TEXTURE_2D, t);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE); return t; }
+const texV = mkTex(0), texM = mkTex(1);
+gl.uniform1i(U.uV, 0); gl.uniform1i(U.uM, 1);
+
+const hex = h => [parseInt(h.slice(1,3),16)/255, parseInt(h.slice(3,5),16)/255, parseInt(h.slice(5,7),16)/255];
+
+/* ---------- 상태 ---------- */
+let stream = null, landmarker = null, lm = null, smLm = null, lastT = -1;
+let crop = {ox:0, oy:0, sx:1, sy:1}, vdim = [0,0], orig = 0, busy = false;
+
+/* ---------- 마스크 (R=피부, G=입술, B=블러셔) ---------- */
+function drawMask(L){
+  const W = mcv.width, H = mcv.height;
+  mctx.globalCompositeOperation = 'source-over'; mctx.filter = 'none';
+  mctx.fillStyle = '#000'; mctx.fillRect(0, 0, W, H);
+  if(!L) return;
+  const P = i => [L[i].x*W, L[i].y*H];
+  const path = idx => idx.forEach((i,k) => { const [x,y] = P(i); k ? mctx.lineTo(x,y) : mctx.moveTo(x,y); });
+  const poly = idx => { mctx.beginPath(); path(idx); mctx.closePath(); };
+  const a = P(234), b = P(454), fw = Math.hypot(a[0]-b[0], a[1]-b[1]);
+  mctx.filter = `blur(${(fw*0.045).toFixed(1)}px)`;
+  mctx.fillStyle = '#f00'; poly(OVAL); mctx.fill();
+  mctx.filter = `blur(${(fw*0.018).toFixed(1)}px)`;
+  mctx.fillStyle = '#000'; mctx.strokeStyle = '#000'; mctx.lineWidth = fw*0.035; mctx.lineJoin = 'round';
+  [LEYE, REYE, LBROW, RBROW, LIP_O].forEach(idx => { poly(idx); mctx.fill(); mctx.stroke(); });
+  mctx.globalCompositeOperation = 'lighter';
+  if(S.lip >= 0){
+    mctx.filter = `blur(${(fw*0.01).toFixed(1)}px)`;
+    mctx.fillStyle = '#0f0'; mctx.beginPath();
+    path(LIP_O); mctx.closePath(); path(LIP_I); mctx.closePath();
+    mctx.fill('evenodd');
+  }
+  if(S.blush >= 0){
+    mctx.filter = 'none';
+    [[50,234],[280,454]].forEach(([c,e]) => {
+      const pc = P(c), pe = P(e);
+      const x = pc[0] + (pe[0]-pc[0])*0.22, y = pc[1] + (pe[1]-pc[1])*0.22 - fw*0.02, r = fw*0.15;
+      const g = mctx.createRadialGradient(x, y, 0, x, y, r);
+      g.addColorStop(0, 'rgba(0,0,255,0.9)'); g.addColorStop(0.5, 'rgba(0,0,255,0.45)'); g.addColorStop(1, 'rgba(0,0,255,0)');
+      mctx.fillStyle = g; mctx.beginPath(); mctx.arc(x, y, r, 0, Math.PI*2); mctx.fill();
+    });
+  }
+}
+
+/* ---------- 레이아웃 ---------- */
+function layout(){
+  const vw = vid.videoWidth, vh = vid.videoHeight; if(!vw) return;
+  vdim = [vw, vh];
+  const st = $('stage').getBoundingClientRect();
+  let A = RATIOS[S.ratio] || (st.width/st.height);
+  const V = vw/vh; let sx = 1, sy = 1;
+  if(V > A) sx = A/V; else sy = V/A;
+  crop = {ox:(1-sx)/2, oy:(1-sy)/2, sx, sy};
+  cv.width = Math.round(vw*sx); cv.height = Math.round(vh*sy);
+  const ca = cv.width/cv.height; let w = st.width, h = w/ca;
+  if(h > st.height){ h = st.height; w = h*ca; }
+  cv.style.width = w + 'px'; cv.style.height = h + 'px';
+  mcv.width = 320; mcv.height = Math.round(320*vh/vw);
+  gl.viewport(0, 0, cv.width, cv.height);
+}
+window.addEventListener('resize', () => setTimeout(layout, 100));
+
+/* ---------- 렌더 루프 ---------- */
+const dist = (a,b) => Math.hypot(a[0]-b[0], a[1]-b[1]);
+function loop(){
+  requestAnimationFrame(loop);
+  if(vid.readyState < 2) return;
+  if(vid.videoWidth !== vdim[0] || vid.videoHeight !== vdim[1]) layout();
+  const vw = vdim[0], vh = vdim[1];
+
+  if(landmarker && vid.currentTime !== lastT){
+    lastT = vid.currentTime;
+    try {
+      const r = landmarker.detectForVideo(vid, performance.now());
+      const f = r.faceLandmarks && r.faceLandmarks[0];
+      if(f){
+        if(!smLm || smLm.length !== f.length) smLm = f.map(p => ({x:p.x, y:p.y}));
+        else for(let i=0;i<f.length;i++){ smLm[i].x = smLm[i].x*0.45 + f[i].x*0.55; smLm[i].y = smLm[i].y*0.45 + f[i].y*0.55; }
+        lm = smLm;
+      } else { lm = null; smLm = null; }
+    } catch(e) { lm = null; }
+    drawMask(lm);
+    gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, texM);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, mcv);
+  }
+
+  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, texV);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, vid);
+
+  gl.uniform2f(U.uRes, vw, vh);
+  gl.uniform2f(U.uOff, crop.ox, crop.oy); gl.uniform2f(U.uSc, crop.sx, crop.sy);
+  gl.uniform1f(U.uMir, S.facing === 'user' ? 1 : 0);
+  gl.uniform1f(U.uOrig, orig);
+  gl.uniform1f(U.uFace, lm ? 1 : 0);
+  if(lm){
+    const Q = i => [lm[i].x*vw, lm[i].y*vh];
+    const ctr = idx => { let x=0,y=0; idx.forEach(i => { x += lm[i].x; y += lm[i].y; }); return [x/idx.length*vw, y/idx.length*vh]; };
+    const fw = dist(Q(234), Q(454));
+    const lc = ctr(LEYE), rc = ctr(REYE);
+    gl.uniform2fv(U['uEyeC[0]'], [lc[0], lc[1], rc[0], rc[1]]);
+    gl.uniform1fv(U['uEyeR[0]'], [dist(Q(33),Q(133))*1.15, dist(Q(362),Q(263))*1.15]);
+    gl.uniform1f(U.uEye, S.eye/100*0.26);
+    const j = [Q(172), Q(136), Q(397), Q(365)];
+    gl.uniform2fv(U['uJaw[0]'], j.flat());
+    const n = Q(4), ch = Q(152);
+    gl.uniform2f(U.uJawT, (n[0]+ch[0])/2, (n[1]+ch[1])/2);
+    gl.uniform1f(U.uJawR, fw*0.32);
+    gl.uniform1f(U.uSlim, S.slim/100*0.17);
+    gl.uniform1f(U.uSmR, Math.max(2, fw*0.012));
+  }
+  gl.uniform1f(U.uSm, S.smooth/100);
+  gl.uniform1f(U.uBr, S.bright/100);
+  gl.uniform3fv(U.uLipC, hex(LIPS[Math.max(0, S.lip)]));
+  gl.uniform1f(U.uLip, S.lip >= 0 ? S.lipAmt/100*0.85 : 0);
+  gl.uniform3fv(U.uBluC, hex(BLUSH[Math.max(0, S.blush)]));
+  gl.uniform1f(U.uBlu, S.blush >= 0 ? S.bluAmt/100 : 0);
+  const F = FILTERS[S.filter] || FILTERS[0];
+  gl.uniform3fv(U.uMul, F.mul); gl.uniform3fv(U.uAdd, F.add);
+  gl.uniform1f(U.uSat, F.sat); gl.uniform1f(U.uCon, F.con); gl.uniform1f(U.uFade, F.fade);
+  gl.uniform1f(U.uVig, F.vig); gl.uniform1f(U.uGrain, F.grain);
+  gl.uniform1f(U.uFAmt, S.fAmt/100); gl.uniform1f(U.uTime, (performance.now()%1000)/10);
+  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+}
+
+/* ---------- 카메라 ---------- */
+async function startCam(){
+  if(stream) stream.getTracks().forEach(t => t.stop());
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:S.facing, width:{ideal:1920}, height:{ideal:1080}}, audio:false});
+  } catch(e) {
+    $('loadTxt').innerHTML = '카메라를 열 수 없어요 (' + e.name + ')<br><br>주소창 왼쪽 자물쇠 → 권한 → 카메라 허용 후 새로고침해 주세요.';
+    return false;
+  }
+  vid.srcObject = stream;
+  try { await vid.play(); } catch(e) {}
+  layout();
+  return true;
+}
+
+async function initFace(){
+  $('loadTxt').textContent = '얼굴 인식 준비 중…';
+  try {
+    const fs = await FilesetResolver.forVisionTasks(WASM);
+    const opt = d => ({baseOptions:{modelAssetPath:MODEL, delegate:d}, runningMode:'VIDEO', numFaces:1});
+    try { landmarker = await FaceLandmarker.createFromOptions(fs, opt('GPU')); }
+    catch(e) { landmarker = await FaceLandmarker.createFromOptions(fs, opt('CPU')); }
+  } catch(e) {
+    toast('얼굴 인식을 불러오지 못했어요. 필터만 사용할 수 있어요.', 4000);
+  }
+}
+
+/* ---------- UI ---------- */
+let toastT;
+function toast(t, ms=1500){ const m = $('msg'); m.textContent = t; m.style.opacity = 1; clearTimeout(toastT); toastT = setTimeout(() => m.style.opacity = 0, ms); }
+
+function filterSwatch(F){
+  const base = [[.93,.76,.66],[.55,.4,.35],[.85,.85,.9]];
+  const col = base.map(c => {
+    let f = c.map((x,i) => x*F.mul[i] + F.add[i]);
+    const l = f[0]*.299 + f[1]*.587 + f[2]*.114;
+    f = f.map(x => ((l + (x-l)*F.sat) - .5)*F.con + .5);
+    f = f.map(x => x*(1-F.fade) + (x*.85+.12)*F.fade);
+    return 'rgb(' + f.map(x => Math.round(Math.min(1, Math.max(0, x))*255)).join(',') + ')';
+  });
+  return `linear-gradient(135deg, ${col[2]} 0%, ${col[0]} 45%, ${col[1]} 100%)`;
+}
+function buildFilters(){
+  const box = $('filters'); box.innerHTML = '';
+  FILTERS.forEach((F, i) => {
+    const b = document.createElement('button'); b.className = 'chip' + (i === S.filter ? ' on' : '');
+    b.innerHTML = `<i style="background:${filterSwatch(F)}"></i>${F.n}`;
+    b.onclick = () => { S.filter = i; save(); [...box.children].forEach((c,k) => c.classList.toggle('on', k === i)); toast(F.n); };
+    box.appendChild(b);
+  });
+}
+function buildSwatches(id, list, key){
+  const box = $(id);
+  const mk = (i, color) => {
+    const b = document.createElement('button'); b.className = 'dot' + (i < 0 ? ' none' : '') + (S[key] === i ? ' on' : '');
+    if(i < 0) b.textContent = '없음'; else b.style.background = color;
+    b.onclick = () => { S[key] = i; save(); [...box.querySelectorAll('.dot')].forEach(d => d.classList.remove('on')); b.classList.add('on'); };
+    box.appendChild(b);
+  };
+  mk(-1); list.forEach((c,i) => mk(i, c));
+}
+function bindSlider(id, key){
+  const s = $('s'+id), v = $('v'+id);
+  s.value = S[key]; v.textContent = S[key];
+  s.oninput = () => { S[key] = +s.value; v.textContent = s.value; save(); };
+}
+bindSlider('FAmt','fAmt'); bindSlider('Smooth','smooth'); bindSlider('Bright','bright');
+bindSlider('Eye','eye'); bindSlider('Slim','slim'); bindSlider('LipAmt','lipAmt'); bindSlider('BluAmt','bluAmt');
+buildFilters(); buildSwatches('lipSw', LIPS, 'lip'); buildSwatches('bluSw', BLUSH, 'blush');
+
+document.querySelectorAll('#tabs button').forEach(b => b.onclick = () => {
+  document.querySelectorAll('#tabs button').forEach(x => x.classList.toggle('on', x === b));
+  document.querySelectorAll('.pane').forEach(p => p.classList.toggle('on', p.id === b.dataset.t));
+  $('panel').classList.remove('hide'); $('bPanel').textContent = '접기'; setTimeout(layout, 0);
+});
+$('bPanel').onclick = () => { const h = $('panel').classList.toggle('hide'); $('bPanel').textContent = h ? '펼치기' : '접기'; setTimeout(layout, 0); };
+
+const setRatioLabel = () => $('bRatio').textContent = S.ratio;
+setRatioLabel();
+$('bRatio').onclick = () => { S.ratio = RORDER[(RORDER.indexOf(S.ratio)+1) % RORDER.length]; save(); setRatioLabel(); layout(); };
+
+const setTimerLabel = () => $('bTimer').textContent = S.timer ? `타이머 ${S.timer}초` : '타이머 끔';
+setTimerLabel();
+$('bTimer').onclick = () => { S.timer = S.timer === 0 ? 3 : S.timer === 3 ? 10 : 0; save(); setTimerLabel(); };
+
+$('bFlip').onclick = async () => { S.facing = S.facing === 'user' ? 'environment' : 'user'; save(); smLm = null; lm = null; await startCam(); };
+
+const cmp = $('bCompare');
+const on = e => { e.preventDefault(); orig = 1; cmp.textContent = '원본 보기'; };
+const off = () => { orig = 0; cmp.textContent = '원본'; };
+cmp.addEventListener('pointerdown', on); ['pointerup','pointerleave','pointercancel'].forEach(t => cmp.addEventListener(t, off));
+
+/* ---------- 촬영 ---------- */
+let lastBlob = null, lastUrl = null;
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+$('bShot').onclick = async () => {
+  if(busy || vid.readyState < 2) return; busy = true;
+  for(let t = S.timer; t > 0; t--){ $('count').textContent = t; await sleep(1000); }
+  $('count').textContent = '';
+  orig = 0;
+  await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+  const fl = $('flash'); fl.style.transition = 'none'; fl.style.opacity = .85;
+  const blob = await new Promise(r => cv.toBlob(r, 'image/jpeg', 0.95));
+  requestAnimationFrame(() => { fl.style.transition = 'opacity .3s'; fl.style.opacity = 0; });
+  if(!blob){ toast('촬영에 실패했어요'); busy = false; return; }
+  lastBlob = blob; if(lastUrl) URL.revokeObjectURL(lastUrl); lastUrl = URL.createObjectURL(blob);
+  $('pvImg').src = lastUrl; $('preview').hidden = false; busy = false;
+};
+const fname = () => { const d = new Date(), z = n => String(n).padStart(2,'0');
+  return `ppossha_${d.getFullYear()}${z(d.getMonth()+1)}${z(d.getDate())}_${z(d.getHours())}${z(d.getMinutes())}${z(d.getSeconds())}.jpg`; };
+$('pvClose').onclick = () => { $('preview').hidden = true; };
+$('pvSave').onclick = () => {
+  const a = document.createElement('a'); a.href = lastUrl; a.download = fname(); document.body.appendChild(a); a.click(); a.remove();
+  toast('저장했어요 (다운로드 폴더 · 갤러리)', 2000); $('preview').hidden = true;
+};
+$('pvShare').onclick = async () => {
+  try {
+    const file = new File([lastBlob], fname(), {type:'image/jpeg'});
+    if(navigator.canShare && navigator.canShare({files:[file]})) await navigator.share({files:[file]});
+    else toast('이 브라우저는 공유를 지원하지 않아요');
+  } catch(e) {}
+};
+
+/* ---------- 시작 ---------- */
+(async () => {
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    $('loadTxt').textContent = '이 주소에서는 카메라를 쓸 수 없어요. https 주소로 열어 주세요.'; return;
+  }
+  if(!(await startCam())) return;
+  requestAnimationFrame(loop);
+  await initFace();
+  $('loading').style.display = 'none';
+  toast(landmarker ? '준비 완료' : '필터 모드', 1200);
+})();
+document.addEventListener('visibilitychange', () => { if(!document.hidden && stream && stream.getVideoTracks()[0]?.readyState === 'ended') startCam(); });
+</script>
+</body>
+</html>
